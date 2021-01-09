@@ -1,48 +1,62 @@
-$(document).ready( () => {
-    dayjs().format()
-    let blankDay = ['','','','','','','','','']
-    let workDay = blankDay;
-    let now = dayjs()
+$(document).ready(function () {
+  let dailySchedule = ["", "", "", "", "", "", "", "", ""];
+  let currentHour = dayjs().hour();
+  $("#currentDay").text(dayjs().format("dddd, MMMM D, YYYY h:mm:ss A"));
 
-    $('#currentDay').text(now.format('dddd, MMMM D, YYYY h:mm A'))
+  // Check local storage for values, and assign to array if needed
+  if (localStorage.getItem("Daily Schedule")) {
+    dailySchedule = JSON.parse(localStorage.getItem("Daily Schedule"));
+  }
 
-    if (!localStorage.getItem('workDay')) {
-        workDay = blankDay
-    } else {
-        workDay = JSON.parse(localStorage.getItem('workDay'))
+  // Iterate through daily schedule
+  for (let i = 0; i < dailySchedule.length; i++) {
+    // Offset i to align with hours of operation
+    let hour = i + 9;
+
+    // Construct each individual row
+    let hourRow = $("<div>").addClass("row");
+    let hourTime = $("<div>").addClass("col-2 hour");
+    // Corrects times from military standard and adds AM/PM
+    $(hourTime).html(
+      (hour <= 12 ? hour : hour % 12) + (hour < 12 ? " am" : " pm")
+    );
+    // Determine correct color for textarea
+    let hourText = $("<textarea>")
+      .addClass(
+        `col-8 ${
+          hour < currentHour
+            ? "past"
+            : hour > currentHour
+            ? "future"
+            : "present"
+        } note${hour}`
+      )
+      .val(dailySchedule[i]);
+    let hourButton = $("<div>").addClass("col-2 saveBtn").attr("save", hour);
+    let hourIcon = $("<i>").addClass("fas fa-save");
+    $(hourButton).append(hourIcon, "<span> Save</span>");
+    $(hourRow).append(hourTime, hourText, hourButton);
+    // Connect all elements with the html document
+    $(".container").append(hourRow);
+  }
+
+  //Timer updates clock and row colors as ime moves on.
+  setInterval(() => {
+    if (currentHour === dayjs().hour() - 1) {
+      $(`.note${currentHour}`).removeClass("present").addClass("past");
+      $(`.note${currentHour + 1}`)
+        .removeClass("future")
+        .addClass("present");
+      currentHour = dayjs().hour();
     }
+    $("#currentDay").text(dayjs().format("dddd, MMMM D, YYYY h:mm:ss A"));
+  }, 1000);
 
-    for (let i = 0; i < workDay.length; i++) {
-        let relativeTime = 'future'
-        let offsetI = i+9
-        if (offsetI < now.hour()) {
-            relativeTime = 'past'
-        } else if (offsetI === now.hour()) {
-            relativeTime = 'present'
-        }
-        let hourToDisplay = 
-        $(`
-        <div class="row">
-            <div class = "col-2 hour" id = "hour${i}">
-                ${offsetI <= 12 ? offsetI : offsetI % 12} ${offsetI < 12 ? 'am' : 'pm'}
-            </div>
-            
-            <textarea class="col-8 ${relativeTime} note${i}" >${workDay[i]}</textarea>
-   
-            <div class = "col-2 saveBtn" save=${i}>
-                <i class = "fas fa-save"></i> Save
-            </div>
-        <div>
-        `);
-        $('.container').append(hourToDisplay)
-    }
-
-    $('.saveBtn').on('click', function() {
-        let indexOfClick = $(this).attr('save')
-        workDay[indexOfClick] = $(`.note${indexOfClick}`).val()
-        localStorage.setItem('workDay', JSON.stringify(workDay))
-    })
-})
-
-
-
+  // Save content of text area
+  $(".saveBtn").on("click", function () {
+    let indexOfClick = $(this).attr("save");
+    // Uses indexOfClick - 9 to undo offset
+    dailySchedule[indexOfClick - 9] = $(`.note${indexOfClick}`).val();
+    localStorage.setItem("Daily Schedule", JSON.stringify(dailySchedule));
+  });
+});
