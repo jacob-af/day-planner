@@ -14,8 +14,8 @@ site is deployed at: [day-planner](http://www.jacobaf.com/day-planer/)
 - Below are time blocks rendered for the standard business hours of 9am to 5pm
 - The time blocks are color coded in response to the hour of the day indicating past, present and future.
 - Each time block has a text area where an event can be entered.
-  *In each row is a save button that will store the entered event to local storage.
-  *If the page is refreshed, any saved events will persist.
+- In each row is a save button that will store the entered event to local storage.
+- If the page is refreshed, any saved events will persist.
 
 ## Potential Improvements
 
